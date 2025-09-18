@@ -1,6 +1,7 @@
 
 package com.sysml.lightmodel.semantic;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,6 +14,9 @@ import lombok.EqualsAndHashCode;
 public class Usage extends Element {
 
     private String definitionName; // DSL 层：引用名，如 "Real", "Controller"
+
+    @TableField(exist = false)
+    private Long definitionId;
 
     private String type;
 
