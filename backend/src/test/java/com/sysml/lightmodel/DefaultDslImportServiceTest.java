@@ -120,8 +120,9 @@ class DefaultDslImportServiceTest {
         assertNotNull(controller, "Controller definition should be parsed");
         Usage gain = findUsage(controller, "gain");
 
-        assertEquals("0..1", gain.getMultiplicity(), "Multiplicity metadata should be captured");
-        assertEquals("42", gain.getDefaultValue(), "Default value metadata should be captured");
+        assertNotNull(gain.getMetadata(), "Usage metadata should be present");
+        assertEquals("0..1", gain.getMetadata().get("multiplicity"), "Multiplicity metadata should be captured");
+        assertEquals("42", gain.getMetadata().get("defaultValue"), "Default value metadata should be captured");
     }
 
     @Test

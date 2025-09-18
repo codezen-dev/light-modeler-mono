@@ -18,14 +18,14 @@ class AttributeUsageDslRendererTest {
 
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("direction", "in");
-        metadata.put("multiplicity", "0..*");
-        metadata.put("defaultValue", "3.14");
+        metadata.put("multiplicity", "0..1");
+        metadata.put("defaultValue", "42");
         metadata.put("unit", "mps");
         element.setMetadata(metadata);
 
         String rendered = new AttributeUsageDslRenderer().render(element, 0);
 
-        assertEquals("attr «in» speed: Real[0..*] = 3.14 { unit = \"mps\" }\n", rendered);
+        assertEquals("attr «in» speed: Real[0..1] = 42 { unit = \"mps\" }\n", rendered);
     }
 
     @Test
