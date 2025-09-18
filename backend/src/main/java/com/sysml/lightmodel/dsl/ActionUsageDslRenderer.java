@@ -2,6 +2,7 @@ package com.sysml.lightmodel.dsl;
 
 import com.sysml.lightmodel.semantic.DslRenderUtils;
 import com.sysml.lightmodel.semantic.Element;
+import com.sysml.lightmodel.semantic.Usage;
 
 public class ActionUsageDslRenderer implements DslRenderer {
     @Override
@@ -11,8 +12,8 @@ public class ActionUsageDslRenderer implements DslRenderer {
         DslRenderUtils.appendDocumentation(sb, element, indentStr);
 
         String typeStr = element.getDefinitionName();
-        if (typeStr == null && element.getResolvedDefinition() != null) {
-            typeStr = element.getResolvedDefinition().getName();
+        if (typeStr == null && element instanceof Usage usage && usage.getResolvedDefinition() != null) {
+            typeStr = usage.getResolvedDefinition().getName();
         }
         if (typeStr == null) {
             typeStr = "null";
