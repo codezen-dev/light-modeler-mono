@@ -1,0 +1,41 @@
+[
+  {
+    "type": "PrimitiveType",
+    "name": "String"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "Integer"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "Real"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "Boolean"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "DateTime"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "URI"
+  },
+  {
+    "type": "PrimitiveType",
+    "name": "Duration"
+  },
+    {
+      "name": "Float",
+      "type": "AttributeDefinition",
+      "children": []
+    },
+    {
+      "name": "Engine",
+      "type": "StructureDefinition",
+      "children": []
+    }
+
+]
