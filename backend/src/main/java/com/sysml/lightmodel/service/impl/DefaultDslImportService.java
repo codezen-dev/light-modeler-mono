@@ -163,8 +163,16 @@ public class DefaultDslImportService implements DslImportService {
         usage.setName(node.getName());
         usage.setType(resolveUsageType(node.getKeyword()));
         usage.setDefinitionName(node.getDefinitionName());
-        usage.setMultiplicity(node.getMultiplicity());
-        usage.setDefaultValue(node.getDefaultValue());
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        if (node.getMultiplicity() != null) {
+            metadata.put("multiplicity", node.getMultiplicity());
+        }
+        if (node.getDefaultValue() != null) {
+            metadata.put("defaultValue", node.getDefaultValue());
+        }
+        if (!metadata.isEmpty()) {
+            usage.setMetadata(metadata);
+        }
         usage.setParentDefinition(owningDefinition);
         if (owner != null) {
             usage.setOwner(owner.getName());
