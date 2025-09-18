@@ -12,11 +12,16 @@ public class DslRenderHelper {
     }
 
     public static String renderMetadata(Element element) {
+        return renderMetadata(element, Set.of("multiplicity"));
+    }
+
+    public static String renderMetadata(Element element, Set<String> excludedKeys) {
         Map<String, Object> metadata = element.getMetadata();
         if (metadata == null || metadata.isEmpty()) return "";
+        Set<String> exclusions = excludedKeys != null ? excludedKeys : Collections.emptySet();
         List<String> entries = new ArrayList<>();
         for (var e : metadata.entrySet()) {
-            if ("multiplicity".equals(e.getKey())) continue;
+            if (exclusions.contains(e.getKey())) continue;
             entries.add(e.getKey() + " = \"" + e.getValue() + "\"");
         }
         return entries.isEmpty() ? "" : "{ " + String.join(", ", entries) + " }";
