@@ -26,16 +26,6 @@
   {
     "type": "PrimitiveType",
     "name": "Duration"
-  },
-    {
-      "name": "Float",
-      "type": "AttributeDefinition",
-      "children": []
-    },
-    {
-      "name": "Engine",
-      "type": "StructureDefinition",
-      "children": []
-    }
+  }
 
 ]

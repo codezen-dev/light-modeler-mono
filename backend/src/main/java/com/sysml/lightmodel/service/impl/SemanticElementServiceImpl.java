@@ -1,12 +1,10 @@
 package com.sysml.lightmodel.service.impl;
 
-import cn.hutool.core.util.IdUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sysml.lightmodel.mapper.ElementMapper;
-import com.sysml.lightmodel.semantic.Definition;
 import com.sysml.lightmodel.semantic.Element;
 import com.sysml.lightmodel.service.SemanticElementService;
-import com.sysml.lightmodel.utils.IdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,35 +21,34 @@ public class SemanticElementServiceImpl implements SemanticElementService {
     @Override
     @Transactional
     public Element createElement(Element element) {
-        if (element.getId() == null) {
-            element.setId(IdGenerator.nextId());
-        }
-
         if (element.getType() == null) {
             element.setType(element.getClass().getSimpleName());
         }
 
+        // 保存当前元素
         elementMapper.insert(element);
 
-        // ✅ 关键：如果是 Definition 类型，则递归 ownedUsages
-        if (element instanceof Definition def && def.getOwnedUsages() != null) {
-            for (Element usage : def.getOwnedUsages()) {
-                usage.setOwner(String.valueOf(element.getId()));
-                createElement(usage);
-            }
-        }
-
-        // ✅ 兼容处理 children 字段
+        // 保存子元素
         if (element.getChildren() != null) {
             for (Element child : element.getChildren()) {
-                child.setOwner(String.valueOf(element.getId()));
-                createElement(child);
+                child.setOwner(String.valueOf(element.getId())); // 设置父 ID
+                createElement(child); // 递归保存
+            }
+        }
+        // ✅ 处理 ownedUsages
+        if (element.getMetadata() != null && element.getMetadata().containsKey("ownedUsages")) {
+            List<Element> usages = JSONUtil.toList(
+                    JSONUtil.toJsonStr(element.getMetadata().get("ownedUsages")),
+                    Element.class
+            );
+            for (Element usage : usages) {
+                usage.setOwner(element.getId().toString());
+                createElement(usage);
             }
         }
 
         return element;
     }
-
 
 
     @Override
@@ -188,8 +185,6 @@ public class SemanticElementServiceImpl implements SemanticElementService {
 
         return root;
     }
-
-
 
     private void buildChildren(Element parent, Map<Long, List<Element>> childrenMap) {
         List<Element> children = childrenMap.get(parent.getId());

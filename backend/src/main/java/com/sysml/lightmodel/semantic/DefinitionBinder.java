@@ -3,33 +3,33 @@ package com.sysml.lightmodel.semantic;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 将 definitionName → resolvedDefinition 映射补全
  */
 public class DefinitionBinder {
 
-    public static void bindAll(List<Element> allElements) {
-        Map<String, Definition> nameMap = new HashMap<>();
+    public static void bindAll(List<Element> elements) {
+        Map<String, Element> nameMap = elements.stream()
+                .filter(e -> e.getName() != null)
+                .collect(Collectors.toMap(Element::getName, e -> e, (a, b) -> a));
 
-        // 构建 name → definition 的映射
-        for (Element e : allElements) {
-            if (e instanceof Definition def && def.getName() != null) {
-                nameMap.put(def.getName(), def);
-            }
-        }
-
-        // 扫描 Usage，进行绑定
-        for (Element e : allElements) {
+        for (Element e : elements) {
             if (e instanceof Definition def && def.getOwnedUsages() != null) {
                 for (Usage usage : def.getOwnedUsages()) {
                     String defName = usage.getDefinitionName();
                     if (defName != null && nameMap.containsKey(defName)) {
-                        usage.setResolvedDefinition(nameMap.get(defName));
+                        Element resolved = nameMap.get(defName);
+                        if (resolved instanceof Definition d) {
+                            usage.setResolvedDefinition(d);
+                        }
                     }
                 }
             }
         }
     }
 }
+
+
 

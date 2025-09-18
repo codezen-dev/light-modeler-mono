@@ -3,16 +3,23 @@ package com.sysml.lightmodel.service.impl;
 import com.sysml.lightmodel.dsl.DefinitionResolver;
 import com.sysml.lightmodel.dsl.DslRendererRegistry;
 import com.sysml.lightmodel.dsl.RendererContext;
+import com.sysml.lightmodel.pojo.DslDocument;
 import com.sysml.lightmodel.semantic.Definition;
 import com.sysml.lightmodel.semantic.Element;
 import com.sysml.lightmodel.semantic.TypeLibraryElement;
 import com.sysml.lightmodel.semantic.Usage;
 import com.sysml.lightmodel.service.DSLService;
+import com.sysml.lightmodel.service.DslDocumentService;
 import com.sysml.lightmodel.service.SemanticElementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,40 +27,24 @@ import java.util.stream.Collectors;
 public class DSLServiceImpl implements DSLService {
 
     private final SemanticElementService elementService;
-
     private final TypeLibraryServiceImpl typeLibraryService;
+
     @Override
     public String exportDsl() {
-        List<Element> modelElements = elementService.getAllElements();
+        List<Element> all = elementService.getAllElements();
         List<Element> roots = elementService.getElementTree();
 
-        // 加载类型库定义
-        List<TypeLibraryElement> libDefs = typeLibraryService.getAllTypeDefinitions();
-        List<Element> libElements = libDefs.stream()
-                .flatMap(e -> Optional.ofNullable(e.getChildren())
-                        .orElse(Collections.emptyList()).stream())
-                .collect(Collectors.toList());
-
-
-        // 合并后解析上下文
-        List<Element> all = new ArrayList<>(modelElements);
-        all.addAll(libElements);
-        populateDefinitionNames(all);
         RendererContext.setResolver(new DefinitionResolver(all));
-
         try {
             StringBuilder builder = new StringBuilder();
-
-            Set<String> imports = detectUsedLibraries(modelElements, typeLibraryService);
+            Set<String> imports = detectUsedLibraries(all, typeLibraryService);
             for (String lib : imports) {
                 builder.append("import \"").append(lib).append("\"\n\n");
             }
-
             for (Element root : roots) {
                 String dsl = DslRendererRegistry.getRenderer(root.getType()).render(root, 0);
                 builder.append(dsl);
             }
-
             return builder.toString();
         } finally {
             RendererContext.clear();
@@ -65,14 +56,22 @@ public class DSLServiceImpl implements DSLService {
         List<Element> all = elementService.getAllElements();
         Element root = elementService.getElementTree(id);
         if (root == null) return "// 节点不存在";
-        populateDefinitionNames(all);
+
         RendererContext.setResolver(new DefinitionResolver(all));
         try {
-            return DslRendererRegistry.getRenderer(root.getType()).render(root, 0);
+            Set<String> imports = detectUsedLibraries(List.of(root), typeLibraryService);
+            StringBuilder builder = new StringBuilder();
+            for (String lib : imports) {
+                builder.append("import \"").append(lib).append("\"\n\n");
+            }
+            String dsl = DslRendererRegistry.getRenderer(root.getType()).render(root, 0);
+            builder.append(dsl);
+            return builder.toString();
         } finally {
             RendererContext.clear();
         }
     }
+
 
     private Set<String> detectUsedLibraries(List<Element> allElements, TypeLibraryServiceImpl typeLibraryService) {
         Set<String> usedTypes = new HashSet<>();
@@ -88,7 +87,6 @@ public class DSLServiceImpl implements DSLService {
             }
         }
 
-        // 匹配这些类型来自哪个库（目前只判断 default 库）
         Set<String> imports = new HashSet<>();
         List<TypeLibraryElement> defaultTypes = typeLibraryService.getAllTypeDefinitions();
         Set<String> defaultTypeNames = defaultTypes.stream()
@@ -104,19 +102,5 @@ public class DSLServiceImpl implements DSLService {
 
         return imports;
     }
-    private void populateDefinitionNames(List<Element> allElements) {
-        Map<String, Element> idToElement = allElements.stream()
-                .filter(e -> e.getId() != null)
-                .collect(Collectors.toMap(e -> e.getId().toString(), e -> e));
-
-        for (Element element : allElements) {
-            if (element.getMetadata() == null) continue;
-            Object defId = element.getMetadata().get("definitionId");
-            if (defId instanceof String id && idToElement.containsKey(id)) {
-                element.setDefinitionName(idToElement.get(id).getName());
-            }
-        }
-    }
-
-
 }
+

@@ -26,17 +26,13 @@ public class Element {
 
     private String owner;
 
-    private String type;
-
-    private String definitionName;
-
-    private Long definitionId;
+    private String type; // 如：AttributeUsage、StructureDefinition 等
 
     @TableField(typeHandler = ListToJsonTypeHandler.class)
     private List<String> modifiers;
 
     @TableField(typeHandler = JsonObjectHandler.class)
-    private Map<String, Object> metadata;
+    private Map<String, Object> metadata; // 用于扩展字段，如 direction、value、featureType 等
 
     @TableField(exist = false)
     private List<Element> children = new ArrayList<>();
@@ -44,9 +40,7 @@ public class Element {
     private String documentation;
 
     @TableField(exist = false)
-    private Element ownerElement;
+    private String definitionName;
 
-    @TableField(exist = false)
-    private Element resolvedDefinition; // 运行时解析的引用
+
 }
-

@@ -1,14 +1,21 @@
 package com.sysml.lightmodel.controller;
 
+import com.sysml.lightmodel.semantic.Definition;
 import com.sysml.lightmodel.semantic.DefinitionBinder;
 import com.sysml.lightmodel.semantic.Element;
+import com.sysml.lightmodel.semantic.Usage;
 import com.sysml.lightmodel.service.DSLService;
+import com.sysml.lightmodel.service.DslDocumentService;
 import com.sysml.lightmodel.service.DslImportService;
 import com.sysml.lightmodel.service.SemanticElementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +27,8 @@ public class DSLController {
     private final DslImportService dslImportService;
 
     private final SemanticElementService elementService;
+
+    private final DslDocumentService dslDocumentService;
 
     @GetMapping("/export")
     public String exportDsl() {
@@ -33,12 +42,7 @@ public class DSLController {
 
     @PostMapping("/import")
     public List<Element> importDsl(@RequestBody String dslText) {
-        List<Element> elements = dslImportService.parseDsl(dslText);
-        DefinitionBinder.bindAll(elements);
-        for (Element element : elements) {
-            elementService.createElement(element);
-        }
-        return elements;
+        return dslImportService.importDslWithPersistence(dslText);
     }
 
 }
